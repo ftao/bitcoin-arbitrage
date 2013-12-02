@@ -10,10 +10,10 @@ from fiatconverter import FiatConverter
 class Market(object):
     def __init__(self, currency):
         self.name = self.__class__.__name__
-        self.currency = currency
+        self.main_currency = getattr(config, 'main_currency', 'USD')
         self.depth_updated = 0
         self.update_rate = 60
-        self.fc = FiatConverter()
+        self.fc = FiatConverter(self.main_currency)
         self.fc.update()
 
     def get_depth(self):
@@ -27,22 +27,23 @@ class Market(object):
                 {'price': 0, 'amount': 0}]}
         return self.depth
 
-    def convert_to_usd(self):
-        if self.currency == "USD":
+    def convert_to_main_currency(self):
+        main_currency = self.main_currency
+        if self.currency == main_currency:
             return
         for direction in ("asks", "bids"):
             for order in self.depth[direction]:
-                order["price"] = self.fc.convert(order["price"], self.currency, "USD")
+                order["price"] = self.fc.convert(order["price"], self.currency, main_currency)
 
     def ask_update_depth(self):
         try:
             self.update_depth()
-            self.convert_to_usd()
+            self.convert_to_main_currency()
             self.depth_updated = time.time()
         except (urllib.error.HTTPError, urllib.error.URLError) as e:
-            logging.error("HTTPError, can't update market: %s" % self.name)
+            logging.exception("HTTPError, can't update market: %s" % self.name)
         except Exception as e:
-            logging.error("Can't update market: %s - %s" % (self.name, str(e)))
+            logging.exception("Can't update market: %s - %s" % (self.name, str(e)))
 
     def get_ticker(self):
         depth = self.get_depth()

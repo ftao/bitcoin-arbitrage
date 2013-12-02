@@ -12,9 +12,10 @@ class FiatConverter:
     rate_exchange_url = "http://rate-exchange.appspot.com/currency?from=%s&to=%s"
     rate_exchange_url_yahoo = "http://download.finance.yahoo.com/d/quotes.csv?s=%s%s=X&f=sl1d1&e=.csv"
 
-    def __init__(self):
+    def __init__(self, main_currency="USD"):
         """USD is used as pivot"""
         self.__dict__ = self.__shared_state
+        self.main_currency = main_currency
         self.rates = {
             "USD": 1,
             "EUR": 0.77,
@@ -44,9 +45,9 @@ class FiatConverter:
         return rate
 
     def update_currency_pair(self, code_to):
-        if code_to == "USD":
+        if code_to == self.main_currency:
             return
-        code_from = "USD"
+        code_from = self.main_currency
         try:
             rate = self.get_currency_pair(code_from, code_to)
         except urllib.error.HTTPError:
