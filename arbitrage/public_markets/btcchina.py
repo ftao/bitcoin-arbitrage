@@ -26,7 +26,7 @@ class BtcChina(Market):
     def update_depth(self):
         post_data = {}
         post_data['method']='getMarketDepth2'
-        post_data['params']=[100]
+        post_data['params']=[10]
         data =  self._private_request(post_data)
         if data is not None:
             self.depth = self.format_depth(data['market_depth'])

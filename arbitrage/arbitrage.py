@@ -28,6 +28,21 @@ class ArbitrerCLI:
                 pmarketsi.append(market)
             for market in pmarketsi:
                 print(market)
+        if "get-depth" in args.command:
+            if not args.markets:
+                logging.error("You must use --markets argument to specify markets")
+                sys.exit(2)
+            markets = args.markets.split(",")
+            marketsi = []
+            for market in markets:
+                exec('import public_markets.' + market.lower())
+                market = eval('public_markets.' + market.lower()
+                              + '.' + market + '()')
+                marketsi.append(market)
+            for market in marketsi:
+                depth = market.get_depth()
+                for bid, ask in zip(depth['bids'], depth['asks']):
+                    print ("buy %s  sell %s" %(bid['price'], ask['price']))
 
     def create_arbitrer(self, args):
         self.arbitrer = Arbitrer()
