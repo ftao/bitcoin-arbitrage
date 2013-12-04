@@ -11,37 +11,12 @@ import logging
 import config
 from .market import Market
 
+class BtcChinaMixin(object):
+    api_root = 'https://api.btcchina.com/api_trade_v1.php'
 
-class BtcChina(Market):
     def __init__(self):
-        super(BtcChina, self).__init__("CNY")
-        self.update_rate = 20
-        self.depth = {'asks': [{'price': 0, 'amount': 0}], 'bids': [
-            {'price': 0, 'amount': 0}]}
-
-        self.access_key=config.btcchina_key
-        self.secret_key=config.btcchina_secret
-        self.api_root = 'https://api.btcchina.com/api_trade_v1.php'
-
-    def update_depth(self):
-        post_data = {}
-        post_data['method']='getMarketDepth2'
-        post_data['params']=[10]
-        data =  self._private_request(post_data)
-        if data is not None:
-            self.depth = self.format_depth(data['market_depth'])
-
-    def sort_and_format(self, l, reverse=False):
-        l.sort(key=lambda x: float(x["price"]), reverse=reverse)
-        r = []
-        for i in l:
-            r.append({'price': float(i["price"]), 'amount': float(i["amount"])})
-        return r
-
-    def format_depth(self, depth):
-        bids = self.sort_and_format(depth['bid'], True)
-        asks = self.sort_and_format(depth['ask'], False)
-        return {'asks': asks, 'bids': bids}
+        self.access_key = config.btcchina_key
+        self.secret_key = config.btcchina_secret
 
     def _get_tonce(self):
         return int(time.time()*1000000)
@@ -104,6 +79,38 @@ class BtcChina(Market):
             logging.error('Can\'t request BTCChina, %s' % err)
 
         return None
+
+
+
+class BtcChina(Market, BtcChinaMixin):
+
+    def __init__(self):
+        Market.__init__(self, "CNY")
+        BtcChinaMixin.__init__(self)
+
+        self.update_rate = 20
+        self.depth = {'asks': [{'price': 0, 'amount': 0}], 'bids': [
+            {'price': 0, 'amount': 0}]}
+
+    def update_depth(self):
+        post_data = {}
+        post_data['method']='getMarketDepth2'
+        post_data['params']=[10]
+        data =  self._private_request(post_data)
+        if data is not None:
+            self.depth = self.format_depth(data['market_depth'])
+
+    def sort_and_format(self, l, reverse=False):
+        l.sort(key=lambda x: float(x["price"]), reverse=reverse)
+        r = []
+        for i in l:
+            r.append({'price': float(i["price"]), 'amount': float(i["amount"])})
+        return r
+
+    def format_depth(self, depth):
+        bids = self.sort_and_format(depth['bid'], True)
+        asks = self.sort_and_format(depth['ask'], False)
+        return {'asks': asks, 'bids': bids}
 
 if __name__ == "__main__":
     market = BtcChina()

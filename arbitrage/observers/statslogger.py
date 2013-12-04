@@ -9,17 +9,17 @@ class StatsLogger(Observer):
         self.total_profit = 0
         self.total_cny = 0
         self.total_btc = 0
+        self.average_prec = 0
 
         self.market_holds = {}
 
     def opportunity(self, profit, volume, buyprice, kask, sellprice, kbid, perc,
                     weighted_buyprice, weighted_sellprice):
-        if perc < 1:
+        perc_threshold = getattr(config, 'observer_logger_perc_threshold', 0)
+        if perc < perc_threshold:
             return
 
         self.total_profit += profit
-        self.total_cny += buyprice * volume
-        self.total_btc += volume
 
         if kask not in self.market_holds:
             self.market_holds[kask] = {"CNY" : 0, "BTC" : 0, "PEAK_CNY" : 0, "PEAK_BTC" : 0}
@@ -34,8 +34,13 @@ class StatsLogger(Observer):
         self.market_holds[kbid]["PEAK_BTC"] = max(self.market_holds[kbid]["BTC"], self.market_holds[kbid]["PEAK_BTC"])
         self.market_holds[kbid]["CNY"] -= sellprice * volume
 
-        logging.info("[stats] profit: %.4f", self.total_profit)
 
         for market, data in self.market_holds.items():
             logging.info("[stats] makret=%s , PEAK_CNY=%.4f, PEAK_BTC=%.4f", market, data['PEAK_CNY'], data['PEAK_BTC'])
 
+        self.total_cny = sum([x['PEAK_CNY'] for x in self.market_holds.values()])
+        self.total_btc = sum([x['PEAK_BTC'] for x in self.market_holds.values()])
+
+        logging.info("[stats] profit: %.4f (%.4f%%) need CNY=%s BTC=%s",
+                     self.total_profit, self.total_profit * 100.0 / self.total_cny / 2,
+                     self.total_cny, self.total_btc)
