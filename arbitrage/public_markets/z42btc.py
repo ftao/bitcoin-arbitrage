@@ -57,8 +57,8 @@ class Z42Btc(Market):
 
 
     def format_depth(self, depth):
-        bids = self.sort_and_format(depth['bids'], True)
-        asks = self.sort_and_format(depth['asks'], False)
+        bids = self.sort_and_format_bids(depth['bids'], True)
+        asks = self.sort_and_format_asks(depth['asks'], False)
         return {'asks': asks, 'bids': bids}
 
 if __name__ == "__main__":

@@ -7,6 +7,9 @@ from .market import Market
 
 
 class Bter(Market):
+
+    api_url = 'https://bter.com/api/1/depth/btc_cny'
+
     def __init__(self):
         super(Bter, self).__init__("CNY")
         self.update_rate = 20
@@ -14,8 +17,7 @@ class Bter(Market):
             {'price': 0, 'amount': 0}]}
 
     def update_depth(self):
-        res = urllib.request.urlopen(
-                'https://bter.com/api/1/depth/btc_cny')
+        res = urllib.request.urlopen(self.api_url)
         jsonstr = res.read().decode('utf8')
         try:
             data = json.loads(jsonstr)
