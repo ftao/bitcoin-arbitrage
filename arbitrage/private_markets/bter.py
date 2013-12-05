@@ -17,17 +17,24 @@ class PrivateBter(Market):
         self.access_key = config.bter_key
         self.secret_key = config.bter_secret
         self.pair = getattr(config, 'bter_pair', 'btc_cny')
-        self.cny_balance = 0
-        self.account_info = {}
+        self.balance = {}
 
         self.session = requests.session()
         self.get_info()
 
     def __str__(self):
-        return str(self.account_info)
+        return str(self.balance)
 
     def get_info(self):
         self.account_info = self.get_account_info()
+        print(self.account_info)
+        self.balance = self.account_info["available_funds"]
+
+    def get_balance(self, currency):
+        try:
+            return float(self.balance.get(currency.upper(), 0))
+        except:
+            return 0
 
     def buy(self, amount, price):
         post_data = {}
@@ -87,3 +94,5 @@ if __name__ == "__main__":
     #market.sell(1, 1000)
     #market.get_info()
     print(market)
+    print(market.get_balance("CNY"))
+    print(market.get_balance("LTC"))
